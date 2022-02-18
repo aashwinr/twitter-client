@@ -32,5 +32,6 @@ Here's a walkthrough of implemented user stories:
 Some features like displaying the likes, the username, the upload date, etc. are being added. 
 
 Currently the project looks like this:
-![Simulator Screen Shot - iPhone 11 - 2022-02-18 at 17 52 42](https://user-images.githubusercontent.com/78666414/154705996-275b4ff9-b013-488b-bb62-7ae2a330118c.png)
+![Simulator Screen Shot - iPhone 12 - 2022-02-19 at 02 13 36](https://user-images.githubusercontent.com/78666414/154773307-bbbafbbf-6979-490f-b1a2-5000f0893a8d.png)
+
 
