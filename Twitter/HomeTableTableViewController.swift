@@ -1,17 +1,10 @@
-//
-//  HomeTableTableViewController.swift
-//  Twitter
-//
-//  Created by Ashwin Rohit on 2/18/22.
-//  Copyright © 2022 Dan. All rights reserved.
-//
-
 import UIKit
 
 class HomeTableTableViewController: UITableViewController {
     
     var tweetList = [NSDictionary]()
-    var numTweets = 10
+    var userInfo = [String:Any]()
+    var numTweets = 20
     
     @IBAction func onLogoutButton(_ sender: Any) {
         TwitterAPICaller.client?.logout()
@@ -22,6 +15,7 @@ class HomeTableTableViewController: UITableViewController {
     }
     
     func loadTweetContents() {
+
         let reqUrl = "https://api.twitter.com/1.1/statuses/home_timeline.json"
         let params = ["count":numTweets]
 
@@ -34,6 +28,7 @@ class HomeTableTableViewController: UITableViewController {
         }, failure: { Error in
             print("Could not get tweets")
         })
+        
     }
     
     override func viewDidLoad() {
@@ -42,32 +37,131 @@ class HomeTableTableViewController: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        
         let cell = tableView.dequeueReusableCell(withIdentifier: "TweetCell", for: indexPath) as! TweetCell
-        let tweetDict = tweetList[indexPath.row]
-        let userInfo = tweetDict["user"] as! [String:Any]
-        let userName = userInfo["name"] as! String
-        let tweetContents = tweetDict["text"] as! String
-        cell.profileName.text = userName
-        cell.tweetContents.text = tweetContents
+        var infoDict = tweetList[indexPath.row]
+        let userInfoDict = retrieveInfo(infoDict)
         
-        let imageUrl = URL(string: userInfo["profile_image_url_https"] as! String)
-        let data = try? Data(contentsOf: imageUrl!)
-        
-        if let imageData = data {
+        if let imageData = getProfilePictureData(userInfoDict) {
             cell.profilePicture.image = UIImage(data: imageData)
+            cell.profilePicture.layer.cornerRadius = cell.profilePicture.bounds.width/2;
+            cell.profilePicture.clipsToBounds = true
         }
         
-        let radius = cell.profilePicture.bounds.width/2
-        cell.profilePicture.layer.cornerRadius = radius
-        cell.profilePicture.layer.masksToBounds = true
+        cell.profileName.text = getProfileName(userInfoDict)
+        cell.dateLabel.text = getFormattedDate(infoDict)
+        cell.userNameLabel.text = getUserName(userInfoDict)
+        cell.retweetSourceLabel.text = ""
+        
+        if let rtDict = getRetweetDict(infoDict) {
+            infoDict = rtDict
+            cell.retweetSourceLabel.text = "rt from @\(getUserName(retrieveInfo(infoDict))!)"
+        }
+        
+        cell.tweetContent.text = getTweetContents(infoDict)
+        cell.retweetCountLabel.text = getRetweetCount(infoDict)
+        cell.favCountLabel.text = getFavCount(infoDict)
         
         return cell
     }
-
+        
+    func retrieveInfo(_ infoDict: NSDictionary) -> [String:Any] {
+        return infoDict["user"] as! [String:Any]
+    }
+    
+    func getProfileName(_ userInfoDict: [String:Any]) -> String {
+        return userInfoDict["name"] as! String
+    }
+    
+    func getUserName(_ userInfoDict: [String:Any]) -> String? {
+        return userInfoDict["screen_name"] as? String
+    }
+    
+    func getTweetContents(_ infoDict: NSDictionary) -> String? {
+        return infoDict["text"] as? String
+    }
+    
+    func getProfilePictureData(_ userInfoDict: [String:Any]) -> Data? {
+        let imageUrlString = userInfoDict["profile_image_url_https"] as! String
+        if let imageUrl = URL(string: imageUrlString) {
+            let data = try? Data(contentsOf: imageUrl)
+            return data
+        }
+        return nil
+    }
+    
+    func getFormattedDate(_ infoDict: NSDictionary) -> String? {
+        
+        var returnStr = ""
+        var elapsedSeconds = Int()
+        var elapsedHours = Int()
+        var elapsedMins = Int()
+        var elapsedDays = Int()
+        
+        let dateStr = infoDict["created_at"] as! String
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "E MMM dd HH:mm:ss Z yyyy"
+        if let date = dateFormatter.date(from: dateStr) {
+            
+            let elapsedTime = abs(date.timeIntervalSinceNow)
+            elapsedSeconds = Int(elapsedTime)
+            elapsedMins = elapsedSeconds/60
+            elapsedHours = elapsedMins/60
+            elapsedDays = elapsedHours/24
+            
+            if elapsedDays > 0 {
+                dateFormatter.dateFormat = "dd MMM"
+                returnStr += dateFormatter.string(from: date)
+            } else if elapsedHours > 0 {
+                returnStr += "\(elapsedHours) " + (elapsedHours == 1 ? "hr" : "hrs")
+            } else {
+                returnStr += "\(elapsedMins) " + (elapsedMins == 1 ? "min" : "mins")
+            }
+            
+        } else {
+            print("Cannot Parse Date")
+            return nil
+        }
+        
+        return returnStr
+        
+    }
+    
+    func getFormattedNum(_ num: Int?) -> String? {
+        let numberFormatter = NumberFormatter()
+        numberFormatter.maximumFractionDigits = 1
+        if let fnum = num {
+            if fnum > 10000 {
+                let dividedVal = Double(fnum)/1000.0 as NSNumber
+                if let formattedStr = numberFormatter.string(from: dividedVal) {
+                    return formattedStr + "k"
+                }
+                return nil
+            } else {
+                return String(fnum)
+            }
+        }
+        return nil
+    }
+    
+    func getRetweetCount(_ infoDict: NSDictionary) -> String? {
+        let numRt = infoDict["retweet_count"] as? NSNumber
+        return getFormattedNum(numRt?.intValue)
+    }
+    
+    func getFavCount(_ infoDict: NSDictionary) -> String? {
+        let numLikes = infoDict["favorite_count"] as? NSNumber
+        return getFormattedNum(numLikes?.intValue)
+    }
+    
+    func getRetweetDict(_ infoDict: NSDictionary) -> NSDictionary? {
+        return infoDict["retweeted_status"] as? NSDictionary
+    }
+    
     override func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
-
+    
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return tweetList.count
     }
