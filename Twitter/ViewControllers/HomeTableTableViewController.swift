@@ -1,5 +1,6 @@
 import UIKit
 
+@available(iOS 13.0, *)
 class HomeTableTableViewController: UITableViewController {
     
     var tweetList = [NSDictionary]()
@@ -31,9 +32,20 @@ class HomeTableTableViewController: UITableViewController {
         
     }
     
+    func initRefreshControl() {
+        self.refreshControl?.addTarget(self, action: #selector(refresh), for: UIControl.Event.valueChanged)
+    }
+    
+    @objc func refresh(_ sender:AnyObject) {
+        self.loadTweetContents()
+        self.tableView.reloadData()
+        self.refreshControl?.endRefreshing()
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        loadTweetContents();
+        initRefreshControl()
+        loadTweetContents()
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -44,7 +56,7 @@ class HomeTableTableViewController: UITableViewController {
         
         if let imageData = getProfilePictureData(userInfoDict) {
             cell.profilePicture.image = UIImage(data: imageData)
-            cell.profilePicture.layer.cornerRadius = cell.profilePicture.bounds.width/2;
+            cell.profilePicture.layer.cornerRadius = cell.profilePicture.bounds.height/2
             cell.profilePicture.clipsToBounds = true
         }
         
@@ -58,9 +70,30 @@ class HomeTableTableViewController: UITableViewController {
             cell.retweetSourceLabel.text = "rt from @\(getUserName(retrieveInfo(infoDict))!)"
         }
         
+        cell.retweetButtonOutlet.setTitle("", for: .normal)
+        cell.likeButtonOutlet.setTitle("", for: .normal)
         cell.tweetContent.text = getTweetContents(infoDict)
-        cell.retweetCountLabel.text = getRetweetCount(infoDict)
-        cell.favCountLabel.text = getFavCount(infoDict)
+        cell.retweetCount = Int(getRetweetCount(infoDict) ?? "0")!
+        cell.likeCount = Int(getFavCount(infoDict) ?? "0")!
+        
+        if didUserRt(infoDict) {
+            cell.retweetTriggered = true
+            cell.setRtButton()
+        } else {
+            cell.retweetTriggered = false
+            cell.unsetRtButton()
+        }
+        
+        if didUserLike(infoDict) {
+            cell.likeTriggered = true
+            cell.setLikeButton()
+        } else {
+            cell.likeTriggered = false
+            cell.unsetLikeButton()
+        }
+        
+        cell.tweetId = getTweetId(infoDict)
+        cell.superViewControllerRef = self
         
         return cell
     }
@@ -156,6 +189,18 @@ class HomeTableTableViewController: UITableViewController {
     
     func getRetweetDict(_ infoDict: NSDictionary) -> NSDictionary? {
         return infoDict["retweeted_status"] as? NSDictionary
+    }
+    
+    func didUserRt(_ infoDict: NSDictionary) -> Bool {
+        infoDict["retweeted"] as! Bool
+    }
+    
+    func didUserLike(_ infoDict: NSDictionary) -> Bool {
+        return infoDict["favorited"] as! Bool
+    }
+    
+    func getTweetId(_ infoDict: NSDictionary) -> Int {
+        return infoDict["id"] as! Int
     }
     
     override func numberOfSections(in tableView: UITableView) -> Int {

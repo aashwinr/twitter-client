@@ -14,10 +14,10 @@ class LoginViewController: UIViewController {
         let request_url = "https://api.twitter.com/oauth/request_token"
         TwitterAPICaller.client?.login(url: request_url, success: {
             UserDefaults.standard.set(true, forKey: "isLoggedIn")
-            self.performSegue(withIdentifier: "loginToHome", sender: self)
         }, failure: { Error in
             print("Login Credentials incorrect")
         })
+        self.performSegue(withIdentifier: "loginToHome", sender: self)
     }
     
     override func viewDidAppear(_ animated: Bool) {
