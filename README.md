@@ -10,6 +10,12 @@
   - Twitter Search
   - and more...
 
+> ### Instructions
+
+- Just clone the project on XCode and slightly tweak the project properties.
+- Compile using XCode
+- Run using the simulator or bare metal by connecting your iPhone.
+
 > ### Screenshots
 
 - Main Page
