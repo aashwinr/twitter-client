@@ -12,7 +12,7 @@
 
 > ### Demo
 
-<blockquote class="imgur-embed-pub" lang="en" data-id="a/NolU2Ix" data-context="false" ><a href="//imgur.com/a/NolU2Ix"></a></blockquote><script async src="//s.imgur.com/min/embed.js" charset="utf-8"></script>
+[img](https://imgur.com/i/NolU2Ix)
 
 > ### Unsupported Features
 
