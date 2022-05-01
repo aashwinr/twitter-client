@@ -13,6 +13,7 @@
 > ### Demo
 
 [Imgur](https://imgur.com/NolU2Ix)
+![image](https://i.imgur.com/NolU2Ix.mp4)
 
 > ### Unsupported Features
 
