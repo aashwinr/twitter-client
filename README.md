@@ -12,7 +12,7 @@
 
 > ### Demo
 
-[img](https://imgur.com/i/NolU2Ix)
+[Imgur](https://imgur.com/NolU2Ix)
 
 > ### Unsupported Features
 
